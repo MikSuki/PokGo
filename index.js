@@ -1,18 +1,65 @@
-//引用'http'模組
-const http = require('http');
-
-//設定server網址，因為在本機端測試，所以輸入127.0.0.1
-//const hostname = '127.0.0.1'  //上傳至伺服器需拿掉
-
-//port 號會由 Heroku 給予，因此不再自行指定
+const express = require('express');
+const path = require('path');
+const app = express();
+const sqlite3 = require('sqlite3').verbose();
+const db_path = 'data/db'
+// const host = '192.168.0.102'
 const port = process.env.PORT || 3000;
 
-//新增一個server並指定他的頁面資訊，內容為'Hello World!'
-const server = http.createServer((req, res) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    res.end('Hello World!\n');
+app.use('/static/img/', express.static(path.join(__dirname, '/img')));
+app.use('/static/data/', express.static(path.join(__dirname, '/data/static')));
+app.use(express.json());
+
+app.all('/bag', function (req, res) {
+    res.sendFile(path.join(__dirname, 'bag.html'));
 });
 
-//監聽得到的 port 號開啟
-server.listen(port, () => console.log(`Listening on ${port}`));
+app.all('/load_pokemon', function (req, res) {
+    const db = new sqlite3.Database(db_path);
+
+    db.serialize(function () {
+        db.all("SELECT rowid AS time, number, height, weight, cp FROM pokemons", function (err, row) {
+            db.close();
+            res.send(row)
+        });
+    });
+});
+
+app.all('/add_pokemon', function (req, res) {
+    const db = new sqlite3.Database(db_path);
+    const pokemon = req.query
+
+    db.serialize(function () {
+        var stmt = db.prepare(`INSERT INTO pokemons
+            (time, number, height, weight, cp) VALUES (?, ?, ?, ?, ?)`);
+        stmt.run(
+            pokemon.time,
+            pokemon.number,
+            pokemon.height,
+            pokemon.weight,
+            pokemon.cp
+        )
+        stmt.finalize();
+    });
+    db.close();
+    res.send(req.query)
+});
+
+app.all('/remove_pokemon', function (req, res) {
+    const db = new sqlite3.Database(db_path);
+    const q = req.query
+
+    db.run(`DELETE FROM pokemons WHERE time=?`, q.time, function (err) {
+        if (err) {
+            return console.error(err.message);
+        }
+        // console.log(`Row(s) deleted ${this.changes}`);
+    });
+    res.send(q)
+});
+
+app.listen(port, /*host, */function () {
+    console.log('start server');
+    console.log('dir:  ' + __dirname)
+});
+
