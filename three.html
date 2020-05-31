@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            margin: 0;
+        }
+
+        canvas {
+            display: block;
+            background-color: rgb(100, 194, 139);
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id='cns'></canvas>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js'></script>
+    <script>
+        const canvas = $('#cns')[0]
+        const ctx = canvas.getContext('2d')
+
+        canvas.width = window.innerWidth
+        canvas.height = window.innerHeight
+
+        const img = new Image()
+        img.onload = function () {
+            ctx.drawImage(img, window.innerWidth / 2 - img.width / 2, 0)
+        }
+        img.src = 'https://i.imgur.com/2u64LR5.png'
+
+        const ball = {
+            pos: { 
+                x: window.innerWidth / 2, 
+                y: window.innerHeight * 0.85
+            },
+            size: { w: 75, h: 75 },
+            velocity:{x: 0, y: 10},
+            img: new Image(),
+            draw: function (ctx) {
+                ctx.drawImage(
+                    this.img,
+                    this.pos.x - this.size.w / 2,
+                    this.pos.y - this.size.h / 2,
+                    this.size.w,
+                    this.size.h
+                )
+            }
+        }
+        const gravity = 9.8
+
+        ball.img.onload = function () {
+            ball.draw(ctx)
+        }
+        ball.img.src = 'https://i.imgur.com/yZCHxYY.png'
+
+
+
+        onmousemove = function (event) {
+            return
+            ball.pos.x = event.clientX
+            ball.pos.y = event.clientY
+            draw()
+        }
+
+
+        function throwBall(){
+            ball.pos.x += ball.velocity.x
+            ball.pos.y += ball.velocity.y
+            ball.velocity.y 
+        }
+
+        function draw(){
+            ctx.clearRect(0, 0, window.innerWidth, window.innerHeight)
+            ctx.drawImage(img, window.innerWidth / 2 - img.width / 2, 0)
+            ball.draw(ctx)
+        }
+
+
+    </script>
+</body>
+
+</html>
