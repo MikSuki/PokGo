@@ -3,8 +3,8 @@ const path = require('path');
 const app = express();
 const sqlite3 = require('sqlite3').verbose();
 const db_path = 'data/db'
-const host = '192.168.0.102'
-const port = 8080
+// const host = '192.168.0.102'
+const port = process.env.PORT || 3000;
 
 app.use('/static/img/', express.static(path.join(__dirname, '/img')));
 app.use('/static/data/', express.static(path.join(__dirname, '/data/static')));
@@ -58,7 +58,7 @@ app.all('/remove_pokemon', function (req, res) {
     res.send(q)
 });
 
-app.listen(port, host, function () {
+app.listen(port, /*host, */function () {
     console.log('start server');
     console.log('dir:  ' + __dirname)
 });
