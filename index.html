@@ -4,7 +4,17 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Street View Side-By-Side</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="css/scroll.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+    <title>PokGo</title>
     <style>
         html,
         body {
@@ -13,7 +23,7 @@
             padding: 0;
         }
 
-        #map {
+        .map {
             float: left;
             height: 100%;
             width: 100%;
@@ -22,34 +32,104 @@
         #floating-panel {
             position: absolute;
             top: 10px;
-            left: 10%; 
+            left: 0;
             z-index: 5;
         }
 
-        #main-panel{
+        #main-panel {
             position: absolute;
             top: 90%;
-            left: 50%; 
+            left: 50%;
             z-index: 5;
         }
     </style>
 </head>
 
 <body>
-    <div id="floating-panel" >
-        <input type="button" value="back"  onclick="app.back();"></input>
-        <input type="button" value="watch map" onclick="app.watchMap();"></input>
+    <div id="floating-panel">
+        <input type="button" value="back" class="btn btn-outline-info " onclick="app.back();"></input>
+        <input type="button" value="watch map" class="btn btn-outline-info " onclick="app.map.watchMap();"></input>
     </div>
-    <div id="main-panel">
-        <input type="button" value="bag"  onclick=""></input>
-        <input type="button" value="pokedex" onclick=""></input>
+    <div id='map_container' class='w-100 h-100'>
+        <div id="main-panel">
+            <input type="button" value="bag" class="btn btn-outline-info " onclick="app.go('bag')"></input>
+            <input type="button" value="pokedex" class="btn btn-outline-info " onclick="app.go('dex')"></input>
+        </div>
+        <div id="radar_map" class='map'></div>
     </div>
-    <div id="map"></div>
+
+    <div id='bag_container' class='container h-100 ' style='display: none;'>
+        <div id='bag_all_pok' class='h-100 scrollbar scrollbar-primary'></div>
+        <div id='bag_sort_group' class='position-absolute' style='left: 30%; top: 80%;'>
+            <button id='bag_number_btn' class="btn btn-outline-info ">編號</button>
+            <button id='bag_cp_btn' class="btn btn-outline-info ">CP</button>
+            <button id='bag_time_btn' class="btn btn-outline-info ">時間</button>
+        </div>
+        <div id='bag_detail' class='pokemon_detail container text-center' style='display: none;'>
+            <p id='bag_cp' class='pokemon_number'></p>
+            <image id='bag_img' width='250'></image>
+            <p id='bag_name' class='pokemon_name'></p>
+            <br>
+            <div class='pokemon_HB row'>
+                <div class='col'>
+                    <div id='bag_height' class='pokemon_height_value'></div>
+                    <div class='pokemon_height_title'>身高</div>
+                </div>
+                <div id='bag_type' class='col'>
+                    <span class='col'></span>
+                    <span class='col'></span>
+                </div>
+                <div class='col'>
+                    <div id='bag_weight' class='pokemon_weight_value'></div>
+                    <div class='pokemon_height_title'>體重</div>
+                </div>
+            </div>
+            <button id='rm_btn' type="button" class="btn btn-outline-info">Remove</button>
+        </div>
+    </div>
+
+    <div id='dex_container' class='pokemon_detail container text-center h-100 ' style='display: none;'>
+        <div id='dex_all_pok' class='h-100 scrollbar scrollbar-primary'></div>
+        <div id='dex_detail' style='display: none;'>
+            <p id='dex_number' class='pokemon_number'></p>
+            <image id='dex_img' width='250'></image>
+            <p id='dex_name' class='pokemon_name'></p>
+            <p class='pokemon_type_title'>屬性</p>
+            <div id='dex_type' class='pokemon_type row'>
+                <div class='col'></div>
+                <div class='col'></div>
+            </div>
+            <br>
+            <p class='pokemon_weakness_title'>弱點</p>
+            <div id='dex_weakness' class='pokemon_weakness row'>
+                <div class='col'></div>
+                <div class='col'></div>
+                <div class='col'></div>
+            </div>
+            <br>
+            <div class='pokemon_HB row'>
+                <div class="col-2"></div>
+                <div class='pokemon_height_title col-2 text-right '>身高</div>
+                <div id='dex_height' class='pokemon_height_value col text-left'></div>
+                <div class='pokemon_height_title col-2 text-right'>體重</div>
+                <div id='dex_weight' class='pokemon_weight_value col text-left'></div>
+                <div class="col-2"></div>
+            </div>
+            <div class='pokemon_story text-left'>
+                <p id='dex_category' class='pokemon_category_title'></p>
+                <p id='dex_story' class='pokemon_story_body'></p>
+            </div>
+        </div>
+    </div>
+
     <script src='js/var.js'></script>
-    <script src='js/app.js'></script>
+    <script src='js/load.js'></script>
+    <script src='js/pokedex.js'></script>
+    <script src='js/bag.js'></script>
+    <script src='js/map.js'></script>
     <script src='js/main.js'></script>
     <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBblg8OR6WM1ZnLVvOIjnBNRnDnn5GeSrU&callback=start">
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBblg8OR6WM1ZnLVvOIjnBNRnDnn5GeSrU&callback=mapLoaded">
         </script>
 </body>
 

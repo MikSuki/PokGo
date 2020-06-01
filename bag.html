@@ -21,6 +21,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
         integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="css/scroll.css">
     <!-- <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
         integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
         crossorigin="anonymous"></script> -->
@@ -40,28 +41,37 @@
             <img src='http://192.168.0.102:8080/img/pokemon/003.png' width='100'>
         </div>
     </div> -->
-    <div id='bag' class='container'></div>
-    <div class='pokemon_detail container text-center'>
-        <p id='bag_cp' class='pokemon_number'>cp2500</p>
-        <image id='bag_img' src='static/img/pokemon/006.png' width='250'></image>
-        <p id='bag_name' class='pokemon_name'>噴火龍</p>
-        <br>
-        <div class='pokemon_HB row'>
-            <div class='col'>
-                <div id='bag_height' class='pokemon_height_value'>1.7 m</div>
-                <div class='pokemon_height_title'>身高</div>
+    <div id='bag_container' class='container'>
+        <button id='back_btn' type="button" class="btn btn-outline-info position-absolute" style='left: 0;'>Back</button>
+        <div id='bag_all_pok' class='scrollbar scrollbar-primary'></div>
+        <div id='bag_sort_group' class='position-absolute' style='left: 30%; top: 80%;'>
+            <!-- <button id='bag_number_btn' class="btn btn-outline-info ">編號</button> -->
+            <button id='bag_cp_btn' class="btn btn-outline-info ">CP</button>
+            <button id='bag_time_btn' class="btn btn-outline-info ">時間</button>
+        </div>
+        <div id='bag_detail' class='pokemon_detail container text-center' style='display: none;'>
+            <p id='bag_cp' class='pokemon_number'>cp2500</p>
+            <image id='bag_img' src='static/img/pokemon/006.png' width='250'></image>
+            <p id='bag_name' class='pokemon_name'>噴火龍</p>
+            <br>
+            <div class='pokemon_HB row'>
+                <div class='col'>
+                    <div id='bag_height' class='pokemon_height_value'>1.7 m</div>
+                    <div class='pokemon_height_title'>身高</div>
+                </div>
+                <div id='bag_type' class='col'>
+                    <span class='col'>火</span>
+                    <span class='col'>飛行</span>
+                </div>
+                <div class='col'>
+                    <div id='bag_weight' class='pokemon_weight_value'>90.5 kg</div>
+                    <div class='pokemon_height_title'>體重</div>
+                </div>
             </div>
-            <div id='bag_type' class='col'>
-                <!-- <div class='col-2'>屬性</div> -->
-                <span class='col'>火</span>
-                <span class='col'>飛行</span>
-            </div>
-            <div class='col'>
-                <div id='bag_weight' class='pokemon_weight_value'>90.5 kg</div>
-                <div class='pokemon_height_title'>體重</div>
-            </div>
+            <button id='rm_btn' type="button" class="btn btn-outline-info">Remove</button>
         </div>
     </div>
+
     <script>
         const TYPE = [
             '一般', '火', '水', '電', '草', '冰', '格鬥', '毒', '地面'
@@ -72,13 +82,21 @@
             pokedex: '/static/data/pokemon.json',
             poke_img: "static/img/pokemon/"
         }
-        const ELEM_ID = {
-            bag: '#bag'
+        const BAG_ID = {
+            container: '#bag_container',
+            all_pok: '#bag_all_pok',
+            detail: '#bag_detail',
+            back: '#back_btn',
+            remove: '#rm_btn',
+            sort_group: '#bag_sort_group',
+            sort_number: '#bag_number_btn',
+            sort_cp: '#bag_cp_btn',
+            sort_time: '#bag_time_btn',
         }
         const SIZE = {
-            bag_img: 100
+            bag_img: window.innerWidth / 3 * 0.5
         }
-        const BAG_ROW_CONTAIN = 4
+        const BAG_ROW_CONTAIN = 3
         const MAX_POK_LEN = 50//386
         const random_pokemon_num = 22
         const POKEMONS = []
@@ -87,18 +105,28 @@
 
         class BAG {
             constructor() {
-                this.UI = $(ELEM_ID.bag)
+                this.UI = {
+                    container: $(BAG_ID.container),
+                    all_pok: $(BAG_ID.all_pok),
+                    detail: $(BAG_ID.detail),
+                    back: $(BAG_ID.back),
+                    remove: $(BAG_ID.remove),
+                    sort_group: $(BAG_ID.sort_group),
+                    sort_number: $(BAG_ID.sort_number),
+                    sort_cp: $(BAG_ID.sort_cp),
+                    sort_time: $(BAG_ID.sort_time),
+                }
                 this.poke_list = {
                     cur_sort: null,
                     byNumber: null,
                     byCp: null,
                     byTime: null
                 }
-                // TODO: get data
+                this.selected = null
+                // get data
                 $.ajax({
                     url: "load_pokemon"
                 }).done(function (data) {
-                    // console.log(data)
                     this.poke_list.byTime = data
                     this.poke_list.cur_sort = this.poke_list.byTime
                     // sort by cp
@@ -123,11 +151,43 @@
                     });
                     this.show()
                 }.bind(this));
+
+
+                // click event
+                this.UI.back.click(function () {
+                    if (this.UI.all_pok.is(":hidden")) {
+                        this.UI.detail.hide()
+                        this.UI.all_pok.show()
+                    }
+                }.bind(this))
+
+                this.UI.remove.click(function () {
+                    this.remove(this.selected)
+                    this.selected = null
+                    this.UI.back.click()
+                }.bind(this))
+
+                this.UI.sort_number.click(function () {
+                    this.sort(0)
+                }.bind(this))
+
+                this.UI.sort_cp.click(function () {
+                    this.sort(1)
+                }.bind(this))
+
+                this.UI.sort_time.click(function () {
+                    this.sort(2)
+                }.bind(this))
+
+                delete this.UI.remove
+                delete this.UI.sort_number;
+                delete this.UI.sort_cp;
+                delete this.UI.sort_time;
             }
 
             catching(/*pokemon*/) {
                 const pokemon = {
-                    time: 0,
+                    time: 1,
                     number: Math.floor(Math.random() * MAX_POK_LEN),
                     height: Math.floor(Math.random() * 15),
                     weight: Math.floor(Math.random() * 100),
@@ -190,10 +250,10 @@
                 }
             }
 
-            remove(index/*pokemon*/) {
+            remove(pokemon/*index*/) {
                 let arr = this.poke_list.byTime
-                const pokemon = arr[index]
-                arr.splice(arr.indexOf(pokemon), 1)
+                // const pokemon = arr[index]
+                let pok = arr.splice(arr.indexOf(pokemon), 1)
                 arr = this.poke_list.byCp
                 arr.splice(arr.indexOf(pokemon), 1)
                 arr = this.poke_list.byNumber
@@ -206,7 +266,7 @@
                         time: pokemon.time
                     }
                 }).done(function (data) {
-                    console.log(data)
+                    // console.log(data)
                 }.bind(this));
             }
 
@@ -230,7 +290,7 @@
 
             show() {
                 let i = 0, len = this.poke_list.cur_sort.length - i;
-                this.UI.html('')
+                this.UI.all_pok.html('')
                 while (len > 0) {
                     const row = document.createElement('div')
                     row.setAttribute('class', 'row')
@@ -241,7 +301,7 @@
                             span = document.createElement('span'),
                             img = POK_IMG[poke_number].cloneNode(false);
 
-                        col.setAttribute('class', 'col-3')
+                        col.setAttribute('class', 'col-4')
                         span.setAttribute('class', 'position-absolute')
                         span.innerHTML = this.poke_list.cur_sort[j].cp
                         img.width = SIZE.bag_img
@@ -252,7 +312,7 @@
                         col.appendChild(img)
                         row.appendChild(col)
                     }
-                    this.UI.append(row)
+                    this.UI.all_pok.append(row)
                     i += BAG_ROW_CONTAIN
                     len = this.poke_list.cur_sort.length - i
                 }
@@ -273,14 +333,20 @@
                 $(bag_ID.name).html(POKEMONS[pokemon.number].name)
                 $(bag_ID.height).html(pokemon.height)
                 $(bag_ID.weight).html(pokemon.weight)
-                return
                 // type
                 elem_type.empty()
-                pokemon.types.forEach(i => {
-                    let span = document.createElement('span')
-                    span.innerHTML = TYPE[i]
-                    elem_type.append(span)
-                })
+                const types = POKEMONS[pokemon.number].types
+                let span = document.createElement('span')
+                if (types.length == 1) {
+                    span.innerHTML = TYPE[types[0]]
+                }
+                else {
+                    span.innerHTML = TYPE[types[0]] + '/' + TYPE[types[1]]
+                }
+                elem_type.append(span)
+                this.UI.all_pok.hide()
+                this.UI.detail.show(600)
+                this.selected = pokemon
             }
         }
 
