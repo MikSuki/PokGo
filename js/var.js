@@ -17,6 +17,7 @@ const LOAD_STATUS = {
 var player_marker
 
 const BAG_ROW_CONTAIN = 3
+// const DEX_ROW_CONTAIN = 5
 const POKEMONS = []
 const POK_IMG = []
 const TYPE = [

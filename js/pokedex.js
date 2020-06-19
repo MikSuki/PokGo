@@ -13,6 +13,7 @@ class Pokedex {
             const img = POK_IMG[i].cloneNode(false);
             img.width = 120
             this.UI.all_pok.append(img)
+            img.classList.add('dex_all_img', /*'rounded-circle'*/)
             img.onclick = function () {
                 this.setDexDetail(i + 1)
             }.bind(this)
@@ -53,7 +54,7 @@ class Pokedex {
     }
 
     back() {
-        if(this.page == 0) return true
+        if (this.page == 0) return true
         --this.page
         this.UI.detail.hide()
         this.UI.all_pok.show()

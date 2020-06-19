@@ -193,6 +193,7 @@ class Bag {
                 col.setAttribute('class', 'col-4')
                 span.setAttribute('class', 'position-absolute')
                 span.innerHTML = this.poke_list.cur_sort[j].cp
+                col.classList.add('text-center')
                 img.width = SIZE.bag_img
                 img.onclick = function () {
                     this.showDetail(this.poke_list.cur_sort[j])

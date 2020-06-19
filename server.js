@@ -2,12 +2,13 @@ const express = require('express');
 const path = require('path');
 const app = express();
 const sqlite3 = require('sqlite3').verbose();
-const db_path = 'data/db'
-const host = '192.168.0.102'
-const port = 8080
+const DB_PATH = 'data/db'
+const HOST = '192.168.0.102'
+const PORT = 80
 
 app.use('/static/img/', express.static(path.join(__dirname, '/img')));
 app.use('/static/data/', express.static(path.join(__dirname, '/data/static')));
+app.use('/static/model/', express.static(path.join(__dirname, '/model')));
 app.use('/css', express.static(path.join(__dirname + '/css')));
 app.use('/js', express.static(path.join(__dirname + '/js')));
 app.use(express.json());
@@ -20,8 +21,12 @@ app.all('/bag', function (req, res) {
     res.sendFile(path.join(__dirname, 'bag.html'));
 });
 
+app.all('/d', function (req, res) {
+    res.sendFile(path.join(__dirname, '3d.html'));
+});
+
 app.all('/load_pokemon', function (req, res) {
-    const db = new sqlite3.Database(db_path);
+    const db = new sqlite3.Database(DB_PATH);
 
     db.serialize(function () {
         db.all("SELECT rowid AS time, number, height, weight, cp FROM pokemons", function (err, row) {
@@ -33,7 +38,7 @@ app.all('/load_pokemon', function (req, res) {
 });
 
 app.all('/add_pokemon', function (req, res) {
-    const db = new sqlite3.Database(db_path);
+    const db = new sqlite3.Database(DB_PATH);
     const pokemon = req.query
 
     db.serialize(function () {
@@ -53,7 +58,7 @@ app.all('/add_pokemon', function (req, res) {
 });
 
 app.all('/remove_pokemon', function (req, res) {
-    const db = new sqlite3.Database(db_path);
+    const db = new sqlite3.Database(DB_PATH);
     const q = req.query
 
     db.run(`DELETE FROM pokemons WHERE time=?`, q.time, function (err) {
@@ -66,7 +71,7 @@ app.all('/remove_pokemon', function (req, res) {
     res.send(q)
 });
 
-app.listen(port, host, function () {
+app.listen(PORT, HOST, function () {
     console.log('start server');
     console.log('dir:  ' + __dirname)
 });

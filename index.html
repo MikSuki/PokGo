@@ -42,23 +42,36 @@
             left: 50%;
             z-index: 5;
         }
+
+        .dex_all_img {
+            background:
+                radial-gradient(black 3px, transparent 4px),
+                radial-gradient(black 3px, transparent 4px),
+                linear-gradient(#fff 4px, transparent 0),
+                linear-gradient(45deg, transparent 74px, transparent 75px, #a4a4a4 75px, #a4a4a4 76px, transparent 77px, transparent 109px),
+                linear-gradient(-45deg, transparent 75px, transparent 76px, #a4a4a4 76px, #a4a4a4 77px, transparent 78px, transparent 109px),
+                #fff;
+            background-size: 109px 109px, 109px 109px, 100% 6px, 109px 109px, 109px 109px;
+            background-position: 54px 55px, 0px 0px, 0px 0px, 0px 0px, 0px 0px;
+            border-radius: 50%;
+        }
     </style>
 </head>
 
 <body>
     <div id="floating-panel">
         <input type="button" value="back" class="btn btn-outline-info " onclick="app.back();"></input>
-        <input type="button" value="watch map" class="btn btn-outline-info " onclick="app.map.watchMap();"></input>
+        <input type="button" value="watch map" c`lass="btn btn-outline-info " onclick="app.map.watchMap();"></input>
     </div>
-    <div id='map_container' class='w-100 h-100'>
+    <div id='map_container' class='w-100 h-100' style='display: none;'>
         <div id="main-panel">
-            <input type="button" value="bag" class="btn btn-outline-info " onclick="app.go('bag')"></input>
-            <input type="button" value="pokedex" class="btn btn-outline-info " onclick="app.go('dex')"></input>
+            <input type="button" value="bag" class="btn btn-outline-info " onclick="app.page('bag')"></input>
+            <input type="button" value="pokedex" class="btn btn-outline-info " onclick="app.page('dex')"></input>
         </div>
         <div id="radar_map" class='map'></div>
     </div>
 
-    <div id='bag_container' class='container h-100 ' style='display: none;'>
+    <div id='bag_container' class='container h-100 bg-info' style='display: none;'>
         <div id='bag_all_pok' class='h-100 scrollbar scrollbar-primary'></div>
         <div id='bag_sort_group' class='position-absolute' style='left: 30%; top: 80%;'>
             <button id='bag_number_btn' class="btn btn-outline-info ">編號</button>
@@ -88,7 +101,7 @@
         </div>
     </div>
 
-    <div id='dex_container' class='pokemon_detail container text-center h-100 ' style='display: none;'>
+    <div id='dex_container' class='pokemon_detail container text-center h-100 ' style='display: block;'>
         <div id='dex_all_pok' class='h-100 scrollbar scrollbar-primary'></div>
         <div id='dex_detail' style='display: none;'>
             <p id='dex_number' class='pokemon_number'></p>
@@ -128,9 +141,9 @@
     <script src='js/bag.js'></script>
     <script src='js/map.js'></script>
     <script src='js/main.js'></script>
-    <script async defer
+    <!-- <script async defer
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBblg8OR6WM1ZnLVvOIjnBNRnDnn5GeSrU&callback=mapLoaded">
-        </script>
+        </script> -->
 </body>
 
 </html>

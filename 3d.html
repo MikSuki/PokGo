@@ -20,6 +20,7 @@
 
 <body>
     <canvas id='cns'></canvas>
+    <canvas id='cns2'></canvas>
     <script>
 
         const canvas = $('#cns')[0]
@@ -33,6 +34,7 @@
             ctx.drawImage(img, window.innerWidth / 2 - img.width / 2, 0)
         }
         img.src = 'https://i.imgur.com/2u64LR5.png'
+
 
         const ball = {
             pos: {
@@ -60,45 +62,59 @@
         ball.img.src = 'https://i.imgur.com/yZCHxYY.png'
 
 
-
-        onmousemove = function (event) {
-            return
-            ball.pos.x = event.clientX
-            ball.pos.y = event.clientY
-            draw()
-        }
-
-
-        function throwBall() {
-            ball.pos.x += ball.velocity.x
-            ball.pos.y += ball.velocity.y
-            ball.velocity.y
-        }
-
-        function draw() {
-            ctx.clearRect(0, 0, window.innerWidth, window.innerHeight)
-            ctx.drawImage(img, window.innerWidth / 2 - img.width / 2, 0)
-            ball.draw(ctx)
-        }
-
-
     </script>
 
     <script>
         var world, sphereBody, timeStep, s_mass = 1;
         var scene, camera, renderer, pokeball;
-        var isclick = false, get_pos_req = false;
-        var mouse = new THREE.Vector2();
+        var isclick = false, get_mouse_move = false;
+        var mouse_cur = new THREE.Vector2();
+        var mouse_last = new THREE.Vector2();
+        var v = { x: 0, y: 0 }
+        const canvas2 = $("#cns2")
 
         var throwb = false;
+
+        const MODEL_PATH = 'static/model/pokeball.glb'
 
         initCannon()
         initThree()
 
-        window.addEventListener("mousedown", onMouseDown, false);
-        window.addEventListener("mousemove", onMouseMove, false);
-        window.addEventListener("mouseup", onMouseUp, false);
-
+        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            console.log('phone')
+            canvas2.on('touchstart', function (e) {
+                e.preventDefault();
+                onCursorDown(e.touches[0].clientX, e.touches[0].clientY)
+            })
+            canvas2.on('touchmove', function (e) {
+                e.preventDefault();
+                onCursorMove(e.touches[0].clientX, e.touches[0].clientY)
+            })
+            canvas2.on('touchend', function (e) {
+                e.preventDefault();
+                console.log('end')
+                onCursorUp()
+            })
+        }
+        else {
+            console.log('PC')
+            canvas2.on('mousedown', function (e) {
+                e.preventDefault();
+                onCursorDown(e.clientX, e.clientY)
+            })
+            canvas2.on('mousemove', function (e) {
+                e.preventDefault();
+                onCursorMove(e.clientX, e.clientY)
+            })
+            canvas2.on('mouseup', function (e) {
+                e.preventDefault();
+                onCursorUp()
+            })
+            canvas2.on('mouseout', function (e) {
+                e.preventDefault();
+                onCursorUp()
+            })
+        }
 
 
         function initCannon() {
@@ -131,11 +147,14 @@
             timeStep = 1.0 / 60.0; // seconds
         }
 
-
         function initThree() {
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ alpha: true });
+            renderer = new THREE.WebGLRenderer({
+                canvas: canvas2[0],
+                alpha: true,
+            });
+
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
             camera.position.z = 5;
@@ -166,7 +185,7 @@
             function drawPokeball() {
                 var loader = new THREE.GLTFLoader();
 
-                loader.load('3d/pokeball.glb', function (gltf) {
+                loader.load(MODEL_PATH, function (gltf) {
                     pokeball = gltf.scene;
                     // pokeball.scale.set(.5, .5, .5);
                     //  pokeball.scale.set(.05, .05, .05);
@@ -180,9 +199,6 @@
             }
 
         }
-
-
-
 
         function start(f_x, f_y, f_z) {
             throwb = true
@@ -201,7 +217,6 @@
             // )
         }
 
-
         function updatePhysics() {
             world.step(timeStep);
             if (isclick)
@@ -211,13 +226,12 @@
         }
 
         function animate() {
-
             updatePhysics();
+            get_mouse_move = true
             // sphereBody.position.set(0, -2, 0)
             // if (throwb)
             // sphereBody.angularVelocity.set(0, 0, 10)
 
-            get_pos_req = true
             // console.log(isclick, sphereBody.mass, sphereBody.velocity)
             // sphereBody.velocity.z = 0
             // console.log(sphereBody.velocity)
@@ -227,58 +241,76 @@
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
 
-            if (sphereBody.velocity.y > 0) console.log('positive')
-            else {
-                if (throwb) {
-                    // throwb = false
-                    sphereBody.velocity.y -= 0.5
-                }
-                console.log('negative')
-            }
+            // if (sphereBody.velocity.y > 0) console.log('positive')
+            // else {
+            //     if (throwb) {
+            //         // throwb = false
+            //         sphereBody.velocity.y -= 0.5
+            //     }
+            //     console.log('negative')
+            // }
         }
 
-
-        function onMouseDown(e) {
+        function onCursorDown(x, y) {
             isclick = true
             sphereBody.velocity.set(0, 0, 0)
             sphereBody.angularVelocity.set(0, 0, 0)
             sphereBody.position.z = 0
             // console.log(sphereBody)
             // sphereBody.mass = 0
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
+            mouse_cur.x = x;
+            mouse_cur.y = y;
         }
 
-        function onMouseMove(e) {
+        function onCursorMove(x, y) {
+            let over_window = false
             // console.log(e.clientX, e.clientY)
-            if (!isclick || !get_pos_req) return
-            get_pos_req = false
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
+            if (!isclick || !get_mouse_move) return
+            get_mouse_move = false
+            // v.x += e.clientX
+            // v.y += e.clientY
+            // v.x /= 2
+            // v.y /= 2
+
+            if (x <= 0 || x >= window.innerWidth) {
+                over_window = true
+                console.log('over x')
+            }
+            else {
+                mouse_last.x = mouse_cur.x
+                mouse_cur.x = x;
+            }
+            if (y <= 0 || y >= window.innerHeight) {
+                over_window = true
+                console.log('over y')
+            }
+            else {
+                mouse_last.y = mouse_cur.y
+                mouse_cur.y = y;
+            }
+            if (over_window) {
+                canvas2.trigger('mouseup');
+                canvas2.trigger('touchend');
+            }
         }
 
-        function onMouseUp(e) {
+        function onCursorUp() {
+            if (!isclick) return
             throwb = true
             isclick = false
-            // sphereBody.mass = s_mass
-            var cur_x = e.clientX;
-            var cur_y = e.clientY;
-            var dx = (cur_x - mouse.x) / timeStep
-            var dy = (cur_y - mouse.y) / timeStep
-            var dz = -1 * Math.sqrt(dx ** 2 + dy ** 2)
-
-
-            // sphereBody.velocity.set(dx, dy, dz)
-            sphereBody.velocity.set(-5, 10, -5)
-            // sphereBody.angularVelocity.set(0, 0, 5)
-            console.log(dx, dy, dz)
+            var movement = chgPosToCannon(
+                mouse_cur.x - mouse_last.x + window.innerWidth / 2,
+                mouse_cur.y - mouse_last.y + window.innerHeight / 2
+            )
+            throwBall(movement)
         }
+
 
         function setBallPos() {
             var raycaster = new THREE.Raycaster();
             var vector = new THREE.Vector3(
-                (mouse.x / window.innerWidth) * 2 - 1,
-                - (mouse.y / window.innerHeight) * 2 + 1,
+                (mouse_cur.x / window.innerWidth) * 2 - 1,
+                - (mouse_cur.y / window.innerHeight) * 2 + 1,
                 0.5
             );
             vector.unproject(camera);
@@ -287,7 +319,57 @@
             var pos = camera.position.clone().add(dir.multiplyScalar(distance));
             sphereBody.position.x = pos.x
             sphereBody.position.y = pos.y
+        }
 
+        function chgPosToCannon(x, y) {
+            var raycaster = new THREE.Raycaster();
+            var vector = new THREE.Vector3(
+                (x / window.innerWidth) * 2 - 1,
+                - (y / window.innerHeight) * 2 + 1,
+                0.5
+            );
+            vector.unproject(camera);
+            var dir = vector.sub(camera.position).normalize();
+            var distance = - camera.position.z / dir.z;
+            var pos = camera.position.clone().add(dir.multiplyScalar(distance));
+            return pos
+        }
+
+        function throwBall(movement) {
+            const v = {
+                x: ~~(movement.x / timeStep / 10),
+                y: ~~(movement.y / timeStep / 10)
+            }
+            const offset = 5
+            v.x += v.x > 0 ? offset : -offset
+            v.y += v.y > 0 ? offset : -offset
+            if (v.x == -offset) v.x = 0
+            if (v.y == -offset) v.y = 0
+
+            // console.log(
+            //     (x - mouse_cur.x) + '\n' +
+            //     (e.clientY - mouse_cur.y) + '\n' +
+            //     Math.sqrt((x - mouse_cur.x) ** 2 + (e.clientY - mouse_cur.y) ** 2) + '\n' +
+            //     v.x + '\n' +
+            //     v.y + '\n'
+            // )
+
+            // console.log(v.x + '\n' + v.y)
+
+            sphereBody.velocity.set(
+                v.x,
+                v.y,
+                // sphereBody.position.y * 10, 
+                -10
+            )
+            // sphereBody.velocity.set(
+            //     cur_pos.x / timeStep,
+            //     cur_pos.y / timeStep / 2,
+            //     // sphereBody.position.y * 10, 
+            //     -10
+            // )
+            // sphereBody.angularVelocity.set(0, 0, 5)
+            // console.log(dx, dy, dz)
         }
 
     </script>
