@@ -6,6 +6,7 @@ class Pokedex {
             detail: $(DEX_ID.detail),
         }
         this.page = 0
+        this.show()
     }
 
     show() {
@@ -15,6 +16,7 @@ class Pokedex {
             this.UI.all_pok.append(img)
             img.classList.add('dex_all_img', /*'rounded-circle'*/)
             img.onclick = function () {
+                Pokemon.updateMap(POK_IMG[i].src)
                 this.setDexDetail(i + 1)
             }.bind(this)
         }
@@ -49,7 +51,7 @@ class Pokedex {
             elem_weakness.append(div)
         })
         this.UI.all_pok.hide()
-        this.UI.detail.show()
+        this.UI.detail.show(600)
         this.page = 1
     }
 

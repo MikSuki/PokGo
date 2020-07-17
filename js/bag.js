@@ -1,5 +1,5 @@
 class Bag {
-    constructor() {
+    constructor(user_pokemons) {
         this.UI = {
             container: $(BAG_ID.container),
             all_pok: $(BAG_ID.all_pok),
@@ -19,37 +19,30 @@ class Bag {
         }
         this.selected = null
         // get data
-        $.ajax({
-            url: "load_pokemon"
-        }).done(function (data) {
-            this.poke_list.byTime = data
-            this.poke_list.cur_sort = this.poke_list.byTime
-            // sort by cp
-            this.poke_list.byCp = this.poke_list.byTime.slice().sort((a, b) => {
-                if (a.cp < b.cp) {
-                    return 1;
-                }
-                if (a.cp > b.cp) {
-                    return -1;
-                }
-                return 0;
-            });
-            // sort by number
-            this.poke_list.byNumber = this.poke_list.byCp.slice().sort((a, b) => {
-                if (a.number < b.number) {
-                    return -1;
-                }
-                if (a.number > b.number) {
-                    return 1;
-                }
-                return 0;
-            });
-            this.show()
-        }.bind(this));
-
-
+        this.poke_list.byTime = user_pokemons
+        this.poke_list.cur_sort = this.poke_list.byTime
+        // sort by cp
+        this.poke_list.byCp = this.poke_list.byTime.slice().sort((a, b) => {
+            if (a.cp < b.cp) {
+                return 1;
+            }
+            if (a.cp > b.cp) {
+                return -1;
+            }
+            return 0;
+        });
+        // sort by number
+        this.poke_list.byNumber = this.poke_list.byCp.slice().sort((a, b) => {
+            if (a.number < b.number) {
+                return -1;
+            }
+            if (a.number > b.number) {
+                return 1;
+            }
+            return 0;
+        });
+        this.show()
         // click event
-
         this.UI.remove.click(function () {
             this.remove(this.selected)
             this.selected = null
@@ -85,17 +78,14 @@ class Bag {
 
         if (this.poke_list.byTime.slice(-1)[0] != undefined)
             pokemon.time = this.poke_list.byTime.slice(-1)[0].time + 1
-
-        $.ajax({
-            url: "add_pokemon",
-            data: pokemon,
-        }).done(function (data) {
-            console.log(data)
-        });
+        app.socket.addPokemon(pokemon)
+        // $.ajax({
+        //     url: "add_pokemon",
+        //     data: pokemon,
+        // })
 
 
         // push in "by time" 
-        console.log(pokemon.cp)
         this.poke_list.byTime.push(pokemon);
         // push in "by number" & "by cp"
         if (this.poke_list.byTime.length == 1) {
@@ -149,14 +139,16 @@ class Bag {
         arr.splice(arr.indexOf(pokemon), 1)
         this.show()
 
-        $.ajax({
-            url: "remove_pokemon",
-            data: {
-                time: pokemon.time
-            }
-        }).done(function (data) {
-            // console.log(data)
-        }.bind(this));
+        app.socket.removePokemon(pokemon.time)
+
+        // $.ajax({
+        //     url: "remove_pokemon",
+        //     data: {
+        //         time: pokemon.time
+        //     }
+        // }).done(function (data) {
+        //     // console.log(data)
+        // }.bind(this));
     }
 
     sort(cmd) {
@@ -188,8 +180,8 @@ class Bag {
                 let poke_number = this.poke_list.cur_sort[j].number,
                     col = document.createElement('div'),
                     span = document.createElement('span'),
-                    img = POK_IMG[poke_number].cloneNode(false);
-
+                    img;
+                img = POK_IMG[poke_number].cloneNode(false);
                 col.setAttribute('class', 'col-4')
                 span.setAttribute('class', 'position-absolute')
                 span.innerHTML = this.poke_list.cur_sort[j].cp
@@ -242,7 +234,7 @@ class Bag {
     }
 
     back() {
-        if(this.page == 0) return true
+        if (this.page == 0) return true
         --this.page
         this.UI.detail.hide()
         this.UI.all_pok.show()

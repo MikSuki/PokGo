@@ -14,6 +14,24 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
         integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
         crossorigin="anonymous"></script>
+    <script text='js' src='https://cdn.jsdelivr.net/npm/socket.io-client@2/dist/socket.io.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.js'></script>
+    <script src="js/lib/GLTFLoader.js"></script>
+    <!-- <script>console.log = () => { }</script> -->
+    <script src='js/var.js'></script>
+    <script src='js/gameobject.js'></script>
+    <script src='js/socket.js'></script>
+    <script src='js/login.js'></script>
+    <script src='js/pokedex.js'></script>
+    <script src='js/bag.js'></script>
+    <script src='js/map.js'></script>
+    <script src='js/capture.js'></script>
+    <script src='js/app.js'></script>
+    <script src='js/load.js'></script>
+    <!-- <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBblg8OR6WM1ZnLVvOIjnBNRnDnn5GeSrU&callback=mapLoaded">
+        </script> -->
     <title>PokGo</title>
     <style>
         html,
@@ -31,16 +49,32 @@
 
         #floating-panel {
             position: absolute;
-            top: 10px;
-            left: 0;
+            top: 5%;
+            left: 5%;
+            transform: translate(-50%, -50%);
             z-index: 5;
         }
 
-        #main-panel {
+        #map-panel {
             position: absolute;
             top: 90%;
             left: 50%;
+            transform: translate(-50%, -50%);
             z-index: 5;
+        }
+
+        .sort_panel {
+            position: absolute;
+            top: 90%;
+            left: 90%;
+            transform: translate(-50%, -50%);
+        }
+
+        .ok_btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
 
         .dex_all_img {
@@ -55,28 +89,64 @@
             background-position: 54px 55px, 0px 0px, 0px 0px, 0px 0px, 0px 0px;
             border-radius: 50%;
         }
+
+        canvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        #catch_btn {
+            position: absolute;
+            left: 50%;
+            top: 40%;
+            z-index: 10;
+            display: none;
+        }
+
+        #img_src_a {
+            position: absolute;
+            right: 0;
+            top: 90%;
+            z-index: 5;
+            display: none;
+        }
     </style>
 </head>
 
 <body>
+    <div id='spinner' class="spinner-border align-middle" role="status">
+        <span class="sr-only ">Loading...</span>
+    </div>
+
+    <div id='login_container' class="h-100 form-inline justify-content-center" style='display: none;'>
+        <div class="input-group mb-3">
+            <input id='login_input' type="text" class="form-control col-5" placeholder="名稱" aria-label="名稱">
+            <div class="input-group-append">
+                <button id='login_btn' class="btn btn-dark" type="button">登入</button>
+            </div>
+        </div>
+    </div>
+
     <div id="floating-panel">
-        <input type="button" value="back" class="btn btn-outline-info " onclick="app.back();"></input>
-        <input type="button" value="watch map" c`lass="btn btn-outline-info " onclick="app.map.watchMap();"></input>
+        <input id='back_btn' type="button" value="back" class="btn btn-dark" style='display: none;'
+            onclick="app.back();"></input>
     </div>
     <div id='map_container' class='w-100 h-100' style='display: none;'>
-        <div id="main-panel">
-            <input type="button" value="bag" class="btn btn-outline-info " onclick="app.page('bag')"></input>
-            <input type="button" value="pokedex" class="btn btn-outline-info " onclick="app.page('dex')"></input>
+        <div id="map-panel">
+            <input type="button" value="雷達" class="btn btn-dark " onclick="app.map.watchMap();"></input>
+            <input type="button" value="背包" class="btn btn-dark " onclick="app.page('bag')"></input>
+            <input type="button" value="圖鑑" class="btn btn-dark " onclick="app.page('dex')"></input>
         </div>
         <div id="radar_map" class='map'></div>
     </div>
 
-    <div id='bag_container' class='container h-100 bg-info' style='display: none;'>
+    <div id='bag_container' class='container h-100 ' style='display: none;'>
         <div id='bag_all_pok' class='h-100 scrollbar scrollbar-primary'></div>
-        <div id='bag_sort_group' class='position-absolute' style='left: 30%; top: 80%;'>
-            <button id='bag_number_btn' class="btn btn-outline-info ">編號</button>
-            <button id='bag_cp_btn' class="btn btn-outline-info ">CP</button>
-            <button id='bag_time_btn' class="btn btn-outline-info ">時間</button>
+        <div id='bag_sort_group' class='sort_panel'>
+            <button id='bag_number_btn' class="btn btn-dark ">編號</button>
+            <button id='bag_cp_btn' class="btn btn-dark ">&nbsp;CP&nbsp;</button>
+            <button id='bag_time_btn' class="btn btn-dark ">時間</button>
         </div>
         <div id='bag_detail' class='pokemon_detail container text-center' style='display: none;'>
             <p id='bag_cp' class='pokemon_number'></p>
@@ -97,11 +167,11 @@
                     <div class='pokemon_height_title'>體重</div>
                 </div>
             </div>
-            <button id='rm_btn' type="button" class="btn btn-outline-info">Remove</button>
+            <button id='rm_btn' type="button" class="btn btn-dark">放生</button>
         </div>
     </div>
 
-    <div id='dex_container' class='pokemon_detail container text-center h-100 ' style='display: block;'>
+    <div id='dex_container' class='pokemon_detail container text-center h-100 ' style='display: none;'>
         <div id='dex_all_pok' class='h-100 scrollbar scrollbar-primary'></div>
         <div id='dex_detail' style='display: none;'>
             <p id='dex_number' class='pokemon_number'></p>
@@ -135,15 +205,11 @@
         </div>
     </div>
 
-    <script src='js/var.js'></script>
-    <script src='js/load.js'></script>
-    <script src='js/pokedex.js'></script>
-    <script src='js/bag.js'></script>
-    <script src='js/map.js'></script>
-    <script src='js/main.js'></script>
-    <!-- <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBblg8OR6WM1ZnLVvOIjnBNRnDnn5GeSrU&callback=mapLoaded">
-        </script> -->
+    <div id='catch_container' class='pokemon_detail container text-center h-100 ' style='display: none;'>
+        <canvas id='catch_cns'></canvas>
+        <button id='catch_btn' class='btn btn-dark ok_btn'>OK</button>
+    </div>
+    <a id='img_src_a' href='https://tw.portal-pokemon.com/play/pokedex' target="_blank">圖片來源&nbsp;&nbsp;</a>
 </body>
 
 </html>
