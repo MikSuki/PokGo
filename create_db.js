@@ -6,6 +6,13 @@ const db = new sqlite3.Database(DB_PATH);
 db.serialize(function () {
     db.run("CREATE TABLE USERS (UID TEXT, NAME TEXT)");
     db.run(`INSERT INTO USERS(UID, NAME) VALUES(?, ?)`, ['u_0', 'test']);
+    db.run(`CREATE TABLE u_0 (
+        time   INTEGER,
+        number INTEGER,
+        height INTEGER,
+        weight INTEGER,
+        cp     INTEGER
+    )`)
 });
 
 db.close();

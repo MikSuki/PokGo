@@ -5,7 +5,7 @@ const server = require('http').Server(app);
 const io = require('socket.io')(server);
 const db_js_path = './db.js'
 const users = []
-const HOST = '192.168.0.102'
+const HOST = require('ip').address()
 const PORT = 80
 const init_positions = [
     { lat: 25.032945, lng: 121.564531 },
@@ -18,8 +18,6 @@ const init_positions = [
     { lat: 23.692525, lng: 120.527525 },
     { lat: 22.652918, lng: 120.303455 },
 ]
-// const UID = 'u_13'
-
 
 app.use('/static/img/', express.static(path.join(__dirname, '/img')));
 app.use('/static/data/', express.static(path.join(__dirname, '/data/static')));

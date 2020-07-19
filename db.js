@@ -4,11 +4,6 @@ const UID = 'u_'
 
 
 function login(name) {
-    // return new Promise(function (resolve, reject) {
-    //     setTimeout(function () {
-    //         resolve(name);
-    //     }, 10000);
-    // });
     const db = new sqlite3.Database(DB_PATH);
     var uid;
     return new Promise(r => {
